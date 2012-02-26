@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-import cairo
 import datetime
 import poppler
 import sys
 import os
 import re
+import json
 
 from optparse import OptionParser
 
@@ -129,6 +129,12 @@ class PdfData(object):
                                                       quake['depth'],
                                                       quake['magnitude'],
                                                       quake['mag_type'])
+def data2json(data, jsonfilename):
+    is_date = lambda x: isinstance(x, datetime.datetime)
+    date_handler = lambda x: x.isoformat() if is_date(x) else None
+
+    jsonfile = open(jsonfilename, 'w')
+    json.dump(data, jsonfile, default=date_handler)
 
 if __name__ == '__main__':
     parser = OptionParser(usage="usage: %prog [options] filetoparse.pdf")
@@ -143,6 +149,9 @@ if __name__ == '__main__':
     parser.add_option("-t", "--timeit",
                       action="store_true", dest="timeit", default=False,
                       help="Calc parsing time")
+    parser.add_option("-j", "--dump-json", type="string", dest="json",
+                      default=None, metavar="FILENAME",
+                      help="Dump data to json file")
     (options, args) = parser.parse_args()
     if len(args) >= 1:
         pdf_data = PdfData(args[0], options.startpage, options.endpage)
@@ -151,6 +160,8 @@ if __name__ == '__main__':
             start = time.time()
             pdf_data.parse_data()
             print "Data parsed in %.2f seconds." % (time.time() - start)
+        if options.json:
+            data2json(pdf_data.parse_data(), options.json)
         if options.printdata:
             pdf_data.parse_data()
             pdf_data.print_data()
