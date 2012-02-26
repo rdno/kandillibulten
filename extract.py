@@ -6,6 +6,8 @@ import sys
 import os
 import re
 
+from optparse import OptionParser
+
 class PdfData(object):
     def __init__(self, filename, startpage=1, endpage=None):
         self.filename = filename
@@ -14,6 +16,7 @@ class PdfData(object):
         self.endpage = self.doc.get_n_pages()
         if endpage:
             self.endpage = endpage
+        self.data = []
     def open_pdf_doc(self, filename):
         fullname = lambda x:'file://'+os.path.abspath(filename)
         return poppler.document_new_from_file(fullname(filename), '')
@@ -92,10 +95,11 @@ class PdfData(object):
                         'ref': f.group('ref'),
                         'type': getType(x)}
     def parse_data(self):
+        if self.data:
+            return self.data
         pages = (self.doc.get_page(x) for x in range(self.startpage-1,
                                                      self.endpage))
         ys = range(170, 570, 20)
-        self.data = []
         old_no = 0
         for page in pages:
             for y in ys:
@@ -125,9 +129,28 @@ class PdfData(object):
                                                       quake['depth'],
                                                       quake['magnitude'],
                                                       quake['mag_type'])
-if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        pdf_data = PdfData(sys.argv[1])
-        pdf_data.parse_data()
-        pdf_data.print_data()
 
+if __name__ == '__main__':
+    parser = OptionParser(usage="usage: %prog [options] filetoparse.pdf")
+    parser.add_option("-s", "--start-page", dest="startpage", default=1,
+                      type="int",
+                      help="First page to parse", metavar="PAGE_NUM")
+    parser.add_option("-e", "--end-page", dest="endpage", default=None,
+                      help="Last page to parse", metavar="PAGE_NUM")
+    parser.add_option("-p", "--print",
+                      action="store_true", dest="printdata", default=False,
+                      help="Print parsed data")
+    parser.add_option("-t", "--timeit",
+                      action="store_true", dest="timeit", default=False,
+                      help="Calc parsing time")
+    (options, args) = parser.parse_args()
+    if len(args) >= 1:
+        pdf_data = PdfData(args[0], options.startpage, options.endpage)
+        if options.timeit:
+            import time
+            start = time.time()
+            pdf_data.parse_data()
+            print "Data parsed in %.2f seconds." % (time.time() - start)
+        if options.printdata:
+            pdf_data.parse_data()
+            pdf_data.print_data()
