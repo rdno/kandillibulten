@@ -32,11 +32,11 @@ class PdfData(object):
         return p.match(text)
     def get_text(self, page, x1, y1, x2, y2):
         return page.get_text(0, self.new_rect(x1, y1, x2, y2))
-    def get_no(self, page, row_y):
+    def get_id(self, page, row_y):
         text = self.get_text(page, 0, row_y, 80, row_y)
-        data = self.check_data(text, '(?P<no>\d+)\s*')
+        data = self.check_data(text, '(\d+)\s*')
         if data:
-            return int(data.group('no'))
+            return int(data.group(0))
         return None
     def get_datetime(self, page, row_y):
         t = lambda x1, x2: self.get_text(page, x1, row_y, x2, row_y)
@@ -103,12 +103,12 @@ class PdfData(object):
         old_no = 0
         for page in pages:
             for y in ys:
-                no = self.get_no(page, y)
+                no = self.get_id(page, y)
                 if no and no != old_no:
                     coor = self.get_coor(page, y)
                     depth = self.get_depth(page, y)
                     mag = self.get_magnitude(page, y)
-                    self.data.append({'no': no,
+                    self.data.append({'id': no,
                                       'date': self.get_datetime(page, y),
                                       'latitude': coor['lat'],
                                       'longtitude': coor['long'],
@@ -122,7 +122,7 @@ class PdfData(object):
         return self.data
     def print_data(self):
         for quake in self.data:
-            print "%4d %s %.2f %.2f %2d %.1f (%s)" % (quake['no'],
+            print "%4d %s %.2f %.2f %2d %.1f (%s)" % (quake['id'],
                                                       quake['date'],
                                                       quake['latitude'],
                                                       quake['longtitude'],
