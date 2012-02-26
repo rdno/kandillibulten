@@ -36,12 +36,12 @@ class PdfData(object):
         text = self.get_text(page, 0, row_y, 80, row_y)
         data = self.check_data(text, '(\d+)\s*')
         if data:
-            return int(data.group(0))
+            return int(data.group(1))
         return None
     def get_datetime(self, page, row_y):
         t = lambda x1, x2: self.get_text(page, x1, row_y, x2, row_y)
-        asInt = lambda x: int(x.group(0))
-        getSec = lambda x: min(int(round(float(x.group(0)))), 59)
+        asInt = lambda x: int(x.group(1))
+        getSec = lambda x: min(int(round(float(x.group(1)))), 59)
         day = self.check_data(t(90, 110), '(\d{1,2})\s*')
         month = self.check_data(t(120, 140), '(\d{1,2})\s*')
         year = self.check_data(t(150, 180), '(\d{4})\s*')
@@ -59,7 +59,7 @@ class PdfData(object):
         return None
     def get_coor(self, page, row_y):
         t = lambda x1, x2: self.get_text(page, x1, row_y, x2, row_y)
-        asFloat = lambda x: float(x.group(0))
+        asFloat = lambda x: float(x.group(1))
         coor_pat = '(\d{1,2}\.\d{1,2})\s*'
         lat = self.check_data(t(300, 340), coor_pat)
         longt = self.check_data(t(370, 410), coor_pat)
@@ -67,14 +67,14 @@ class PdfData(object):
         if lat and longt and ref:
             return {'lat':asFloat(lat),
                     'long':asFloat(longt),
-                    'ref':ref.group(0)}
+                    'ref':ref.group(1)}
     def get_depth(self, page, row_y):
         t = lambda x1, x2: self.get_text(page, x1, row_y, x2, row_y)
         depth = self.check_data(t(460, 480), '(\d+)\s*')
         ref = self.check_data(t(500, 520), '(\w)\s*')
         if depth and ref:
-            return {'depth':int(depth.group(0)),
-                    'ref':ref.group(0)}
+            return {'depth':int(depth.group(1)),
+                    'ref':ref.group(1)}
     def get_magnitude(self, page, y):
         xs = range(530, 780, 50)
         types = ['Ms', 'Mb', 'Md', 'Ml', 'Mw']
