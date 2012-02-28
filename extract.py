@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import datetime
-import poppler
-import sys
-import os
-import re
 import json
+import os
+import poppler
+import pymongo
+import re
 
 from optparse import OptionParser
 
@@ -136,6 +136,12 @@ def data2json(data, jsonfilename):
     jsonfile = open(jsonfilename, 'w')
     json.dump(data, jsonfile, default=date_handler)
 
+def data2mongo(data, dbname):
+    conn = pymongo.Connection()
+    db = conn[dbname]
+    quakes = db.quakes
+    quakes.insert(data)
+
 if __name__ == '__main__':
     parser = OptionParser(usage="usage: %prog [options] filetoparse.pdf")
     parser.add_option("-s", "--start-page", dest="startpage", default=1,
@@ -152,6 +158,9 @@ if __name__ == '__main__':
     parser.add_option("-j", "--dump-json", type="string", dest="json",
                       default=None, metavar="FILENAME",
                       help="Dump data to json file")
+    parser.add_option("-m", "--dump-mongodb", type="string", dest="mongo",
+                      default=None, metavar="DB_NAME",
+                      help="Dump data to mongodb")
     (options, args) = parser.parse_args()
     if len(args) >= 1:
         pdf_data = PdfData(args[0], options.startpage, options.endpage)
@@ -162,6 +171,8 @@ if __name__ == '__main__':
             print "Data parsed in %.2f seconds." % (time.time() - start)
         if options.json:
             data2json(pdf_data.parse_data(), options.json)
+        if options.mongo:
+            data2mongo(pdf_data.parse_data(), options.mongo)
         if options.printdata:
             pdf_data.parse_data()
             pdf_data.print_data()
