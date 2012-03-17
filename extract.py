@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import datetime
+import db
 import json
 import os
 import poppler
-import pymongo
 import re
 
 from optparse import OptionParser
@@ -137,20 +137,8 @@ def data2json(data, jsonfilename):
     json.dump(data, jsonfile, default=date_handler)
 
 def data2mongo(data, dbname):
-    conn = pymongo.Connection()
-    db = conn[dbname]
-    quakes = db.quakes
-    #db.places.create_index([("loc", GEO2D)])
-    quakes.create_index([('location', pymongo.GEO2D),
-                         ('date', pymongo.ASCENDING),
-                         ('magnitude', pymongo.ASCENDING)])
-    for quake in data:
-        quakes.insert({'date': quake['date'],
-                       'depth': quake['depth'],
-                       'location': [quake['latitude'],
-                                    quake['longtitude']],
-                       'magnitude': quake['magnitude'],
-                       'mag_type':quake['mag_type']})
+    mongo = db.MongoDB(dbname, 'quakes')
+    mongo.insert(data)
 
 if __name__ == '__main__':
     parser = OptionParser(usage="usage: %prog [options] filetoparse.pdf")
