@@ -1,17 +1,23 @@
 # Nedir?
 PDF halinde yayınlanan [UDIM](http://www.koeri.boun.edu.tr/sismo/ "Ulusal Deprem İzleme Merkezi") aylık bültenlerinden veri çıkarma, veritabanına kaydedip üzerinde sorgu yapabilmek için yazılmış bir araç seti.
+
 # Sistem Gereksinimleri
  * Python 2.7
  * pypoppler (PDF'den veri çıkarmak için)
- * pymongo (Veritabanı işlemleri için)
+ * mongodb & pymongo (Veritabanı işlemleri için)
+
 # Kullanım
-  <code>
-    python extract.py bulten.pdf -s BASLANGIC_SAYFASI -e SON_SAYFA
-                                 -t #parse işlemi için geçen zamanı hesapla
-                                 -p #veriyi yaz
-                                 -m MONGODB_DB_ADI
-                                 -j JSON_DOSYA_ADI
-  </code>
+
+  ` python extract.py bulten.pdf -s BASLANGIC_SAYFASI -e SON_SAYFA`
+
+  `                               -t #parse işlemi için geçen zamanı hesapla`
+
+  `                               -p #veriyi yaz`
+
+  `                               -m MONGODB_DB_ADI`
+
+  `                               -j JSON_DOSYA_ADI`
+
 # Lisans
 Rıdvan Örsvuran (C) 2012
 
