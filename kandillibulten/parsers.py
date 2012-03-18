@@ -88,25 +88,63 @@ class PdfParser(object):
         if depth and ref:
             return {'depth':int(depth.group(1)),
                     'ref':ref.group(1)}
-    def get_magnitude(self, page, y):
-        xs = range(530, 780, 50)
-        types = ['Ms', 'Mb', 'Md', 'Ml', 'Mw']
+    def find_rectangle_to_selection(self, t, page_height):
+        h = t.y2 -t.y1
+        n = self.new_rect(t.x1, page_height-t.y1,
+                          t.x2, page_height-t.y2)
+        return n
+    def is_magnitude_in_right_row(self, mag, page, rect, page_height):
+        def same_row(f, s):
+            if f.y1 >= (s.y1+s.y2)/2 >= f.y2:
+                return True
+            return False
+        for rec in page.find_text(mag):
+            sel = self.find_rectangle_to_selection(rec, page_height)
+            if same_row(sel, rect):
+                return True
+        return False
+    def get_magnitude(self, page, y, page_height):
+        xs = [741, 687, 634, 581, 527]
+        types = ['Mw', 'Ml', 'Md', 'Mb', 'Ms']
         getType = lambda x:types[xs.index(x)]
-        n = lambda x: self.get_text(page, x+50, y, x+5, y+5) #rightToleft
-        is_valid = re.compile('^\s*(?P<mag>\d\.\d)\s+(?P<ref>\w)\s*$')
+        n = lambda x: self.get_text(page, x+25, y, x+5, y+5) #rightToleft
+        r = lambda x: self.get_text(page, x+30, y, x+50, y+5)
+        sr = lambda x: self.new_rect(x+25, y, x+5, y+5)
+        is_valid = re.compile('^\s*(?P<mag>\d\.\d)\s+$')
+        ref_valid = re.compile('^\s*(?P<ref>\w)\s+$')
+        mags = {}
         for x in xs:
             m = is_valid.match(n(x))
-            if m:
-                return {'magnitude':float(m.group('mag')),
-                        'ref': m.group('ref'),
-                        'type': getType(x)}
-        fallback = re.compile('^\s*(?P<mag>\d\.\d)\s+[\w\d\.\s]+(?P<ref>\w)\s*$')
-        for x in xs:
-            f = fallback.match(n(x))
-            if f:
-                return {'magnitude':float(f.group('mag')),
-                        'ref': f.group('ref'),
-                        'type': getType(x)}
+            mr = ref_valid.match(r(x))
+            if m and mr:
+                if self.is_magnitude_in_right_row(m.group('mag'), page, sr(x), page_height):
+                    mags[getType(x)] = {'ref':mr.group('ref'),
+                                        'mag':float(m.group('mag'))}
+        mag_type = self.select_best_magnitude(mags)
+        return {'magnitude':mags[mag_type]['mag'],
+                'ref':mags[mag_type]['ref'],
+                'type':mag_type}
+    def select_best_magnitude(self, mags):
+        #mags: {'Mw':{mag:3, ref:N}, 'Ml':{mag:3.1, ref:R}}
+        refs = {'N':[], 'R':[]}
+        #type priority Mw > Ml > Md > Mb > Ms
+        def select_best_type(types):
+            for mag_type in ['Mw', 'Ml', 'Md', 'Mb', 'Ms']:
+                if mag_type in types:
+                    return mag_type
+        #ref priority N > R
+        for mag in mags:
+            refs[mags[mag]['ref']].append(mag)
+
+        if len(refs['N']) == 1:
+            return refs['N'][0]
+        elif len(refs['N']) == 0:
+            if len(refs['R']) == 1:
+                return refs['R'][0]
+            else:
+                return select_best_type(refs['R'])
+        else:
+            return select_best_type(refs['N'])
     def parse_data(self):
         if self.data:
             return self.data
@@ -115,12 +153,13 @@ class PdfParser(object):
         ys = range(170, 570, 20)
         old_no = 0
         for page in pages:
+            page_height = page.get_size()[1]
             for y in ys:
                 no = self.get_id(page, y)
                 if no and no != old_no:
                     coor = self.get_coor(page, y)
                     depth = self.get_depth(page, y)
-                    mag = self.get_magnitude(page, y)
+                    mag = self.get_magnitude(page, y, page_height)
                     self.data.append({'id': no,
                                       'date': self.get_datetime(page, y),
                                       'latitude': coor['lat'],

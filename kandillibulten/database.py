@@ -74,7 +74,8 @@ class MongoDB:
                                ('date', pymongo.ASCENDING),
                                ('magnitude', pymongo.ASCENDING)])
     def _insert(self, quake):
-        self.col.insert({'date': quake['date'],
+        self.col.insert({'id': quake['id'],
+                         'date': quake['date'],
                          'depth': quake['depth'],
                          'location': [quake['latitude'],
                                       quake['longtitude']],
