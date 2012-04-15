@@ -7,16 +7,13 @@ PDF halinde yayınlanan [UDIM](http://www.koeri.boun.edu.tr/sismo/ "Ulusal Depre
  * mongodb & pymongo (Veritabanı işlemleri için)
 
 # Kullanım
-
-  ` python extract.py bulten.pdf -s BASLANGIC_SAYFASI -e SON_SAYFA`
-
-  `                               -t #parse işlemi için geçen zamanı hesapla`
-
-  `                               -p #veriyi yaz`
-
-  `                               -m MONGODB_DB_ADI`
-
-  `                               -j JSON_DOSYA_ADI`
+```
+python extract.py bulten.pdf -s BASLANGIC_SAYFASI -e SON_SAYFA
+                             -t #parse işlemi için geçen zamanı hesapla
+                             -p #veriyi yaz
+                             -m MONGODB_DB_ADI
+                             -j JSON_DOSYA_ADI
+```
 
 # Lisans
 Rıdvan Örsvuran (C) 2012
