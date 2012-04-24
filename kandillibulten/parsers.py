@@ -111,7 +111,7 @@ class PdfParser(object):
         r = lambda x: self.get_text(page, x+30, y, x+50, y+5)
         sr = lambda x: self.new_rect(x+25, y, x+5, y+5)
         is_valid = re.compile('^\s*(?P<mag>\d\.\d)\s+$')
-        ref_valid = re.compile('^\s*(?P<ref>\w)\s+$')
+        ref_valid = re.compile('^\w*\s*(?P<ref>\w)\s+$')
         mags = {}
         for x in xs:
             m = is_valid.match(n(x))
